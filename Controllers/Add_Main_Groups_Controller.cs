@@ -50,72 +50,104 @@ namespace ERP
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
-    }
-}
-
-//[HttpPost]
-/*        public async Task<IActionResult> AddMainGroupWithSubgroups([FromBody] AddMainGroupDto addMainGroupDto)
+        [HttpGet("GetMainGroupsWithMatchingSubGroups")]
+        public async Task<IActionResult> GetMainGroupsWithMatchingSubGroups([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
-            Guid userId = Guid.Parse("9d81668e-0fe0-4e66-8d63-99a15f6e236e");
-
-            if (addMainGroupDto == null || string.IsNullOrEmpty(addMainGroupDto.MainGroupName))
-            {
-                return BadRequest("Invalid main group data.");
-            }
-
-            using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                var mainGroup = new Or_Maingroup
+                // استدعاء الدالة من الـ Repository لجلب البيانات
+                var result = await _repository.GetMainGroupsWithSubGroupsByCodeAsync(pageNumber, pageSize);
+
+                // التحقق إذا لم يتم العثور على بيانات
+                if (result == null || !result.Data.Any())
                 {
-                    Id = Guid.NewGuid(),
-                    Name = addMainGroupDto.MainGroupName,
-                    code = addMainGroupDto.MainGroupCode,
-                    CreatedAt = DateTime.UtcNow,
-                    Organization_id = Guid.NewGuid(), // Set this to the appropriate value
-                    user_id = userId, // Set this to the appropriate value
-                    State = true
-                };
-
-                await _context.Or_Maingroups.AddAsync(mainGroup);
-                await _context.SaveChangesAsync();
-
-                foreach (var subgroupDto in addMainGroupDto.Subgroups)
-                {
-                    if (subgroupDto.SectionId == Guid.Empty || string.IsNullOrEmpty(subgroupDto.Note))
-                    {
-                        //_logger.LogError("Invalid subgroup data. Skipping...");
-                        continue;
-                    }
-
-                    var subgroup = new Ma_Subgroup
-                    {
-                        Id = Guid.NewGuid(),
-                        code = mainGroup.code,
-                        user_id = userId,
-                        SectionId = subgroupDto.SectionId,
-                        note = subgroupDto.Note,
-                        itemtype = subgroupDto.TypeItem,
-                        suptreegroup = subgroupDto.State,
-                        CreatedAt = DateTime.UtcNow,
-                        State = subgroupDto.State,
-                        maingroup_id = mainGroup.Id
-                    };
-
-                    //mainGroup.Ma_Subgroups.Add(subgroup);
-                    await _context.Ma_Subgroups.AddRangeAsync(subgroup);
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.Message = "لم يتم العثور على أي بيانات مطابقة.";
+                    return NotFound(_response);
                 }
 
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
-
-                return Ok(mainGroup);
+                // استجابة ناجحة
+                _response.IsSuccess = true;
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.Message = "تم استرجاع البيانات بنجاح.";
+                _response.Result = result;
+                return Ok(_response);
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync();
-               // _logger.LogError(ex, "An error occurred while adding main group and subgroups.");
-                return StatusCode(500, "Internal server error");
+                // استجابة الخطأ
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.Message = "حدث خطأ أثناء استرجاع البيانات.";
+                _response.ErrorMessages.Add(ex.Message);
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
-*/
+        [HttpGet("GetMainGroupWithSubGroupsById")]
+        public async Task<IActionResult> GetMainGroupWithSubGroupsById([FromQuery] Guid id)
+        {
+            try
+            {
+                var result = await _repository.GetMainGroupWithSubGroupsByIdAsync(id);
+
+                if (result == null)
+                {
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.Message = "لم يتم العثور على أي بيانات مطابقة.";
+                    return NotFound(_response);
+                }
+
+                // استجابة ناجحة
+                _response.IsSuccess = true;
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.Message = "تم استرجاع البيانات بنجاح.";
+                _response.Result = result;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                // استجابة الخطأ
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.Message = "حدث خطأ أثناء استرجاع البيانات.";
+                _response.ErrorMessages.Add(ex.Message);
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+        [HttpDelete("DeleteMainGroupWithSubGroups")]
+        public async Task<IActionResult> DeleteMainGroupWithSubGroups([FromQuery] Guid id)
+        {
+            try
+            {
+                var isDeleted = await _repository.DeleteMainGroupWithSubGroupsAsync(id);
+
+                if (!isDeleted)
+                {
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.Message = "لم يتم العثور على المجموعة الرئيسية المطلوبة.";
+                    return NotFound(_response);
+                }
+                // استجابة ناجحة
+                _response.IsSuccess = true;
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.Message = "تم حذف المجموعة الرئيسية والمجموعات الفرعية المرتبطة بها بنجاح";
+                return Ok(_response);
+                //return Ok(new { Message = "تم حذف المجموعة الرئيسية والمجموعات الفرعية المرتبطة بها بنجاح." });
+            }
+            catch (Exception ex)
+            {
+                // استجابة الخطأ
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.Message = "حدث خطأ أثناء الحذف";
+                _response.ErrorMessages.Add(ex.Message);
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+        }
+
+    }
+}
+
