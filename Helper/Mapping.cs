@@ -38,6 +38,7 @@ namespace ERP
             CreateMap<Or_Maingroup, Or_maingroupDto>().ReverseMap();
             CreateMap<Or_Maingroup, Update_maingroupDto>().ReverseMap();
             CreateMap<Or_Maingroup, AddMainGroupDto>().ReverseMap();
+            CreateMap<Or_Maingroup, MainGroupWithSubGroupsDto>().ReverseMap();
  
 
 
