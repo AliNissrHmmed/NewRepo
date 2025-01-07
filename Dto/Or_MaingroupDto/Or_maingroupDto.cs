@@ -71,11 +71,20 @@
     {
 
 
-        public string Name { get; set; }
-        public string Code { get; set; }
-        public bool State { get; set; }
+        public string? Name { get; set; }
+
+        public bool? State { get; set; }
 
 
+    }
+
+    public class UpdateSubgroupDto
+    {
+        public bool? SupTreeGroup { get; set; }
+        public bool? State { get; set; }
+        public Guid? SectionId { get; set; }
+        public string? Note { get; set; }
+        public string? TypeItem { get; set; }
     }
 
 }

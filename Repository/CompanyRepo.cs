@@ -31,17 +31,36 @@ namespace ERP
 
 
 
-
-        public async Task<PaginatedResult<Company>> GetPaginatedCompaniesAsync( int pageNumber = 1, int pageSize = 25)
-       
+        public async Task<PaginatedResult<CompanyWithAttachmentsDto>> GetCompaniesWithAttachmentsAsync(int pageNumber = 1, int pageSize = 25)
         {
             int totalCount = await _context.Companies.CountAsync();
-
+            var baseUrl = "http://localhost:5200/";
             var companies = await _context.Companies
-                
+                .Include(c => c.Attachments)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
+
+            var companyDtos = companies.Select(company => new CompanyWithAttachmentsDto
+            {
+                Id = company.Id,
+                Name = company.name,
+                Phone = company.phone,
+                Phone2 = company.phone2,
+                Address = company.address,
+                CreatedAt = company.CreatedAt,
+                UserId = company.user_id,
+                OrganizationId = company.Organization_id,
+                State = company.State,
+                MaincategoryId = company.Maincategory_id,
+
+                AttachmentUrls= company.Attachments
+                .Where(a => !string.IsNullOrEmpty(a.url))
+                .Select(a => $"{baseUrl}{a.url}")
+                .ToList()
+            //AttachmentUrls = company.Attachments.Select(a => a.url).ToList()
+
+        }).ToList();
 
             var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
@@ -54,14 +73,18 @@ namespace ERP
             };
 
             // Return paginated result with data and metadata
-            return new PaginatedResult<Company>
+            return new PaginatedResult<CompanyWithAttachmentsDto>
             {
-                Data = companies,
+                Data = companyDtos,
                 Metadata = paginationData
             };
         }
 
-    
+
+
+       
+
+       
 
        
 

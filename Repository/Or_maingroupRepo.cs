@@ -1,10 +1,12 @@
 ﻿using ERP.PURCHASES.Dto;
+using ERP.PURCHASES.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace ERP
 
 {
-    public class Or_maingroupRepo : Repository<Or_Maingroup>
+    public class Or_maingroupRepo : Repository<Or_Maingroup>,IMain_Groups_Repository
     {
         private readonly ApplicationDbContext _context;
 
@@ -14,66 +16,72 @@ namespace ERP
         }
 
 
-        public async Task<List<Or_Maingroup>>GetmainMainGroupAsync()
+       
 
+
+        public async Task UpdateMainGroupAsync(Update_maingroupDto update_maingroupDto,Guid id)
         {
            
-             return   await _context.Or_Maingroups.ToListAsync();
- 
+            try
+            {
+                var existingMaingroup = await _context.Or_Maingroups.FindAsync(id);
+
+                if (existingMaingroup == null)
+                {
+                    throw new InvalidOperationException("Maingroup not found.");
+                }
+
+                // Update main category details
+
+                existingMaingroup.Name = update_maingroupDto.Name ?? existingMaingroup.Name;
+                existingMaingroup.State = update_maingroupDto.State ?? existingMaingroup.State;
+
+
+                 _context.Or_Maingroups.Update(existingMaingroup);
+
+                await _context.SaveChangesAsync();
+                
+
+            }
+            catch (Exception ex)
+            {
+                
+                throw new InvalidOperationException("An error occurred while update existingMaingroup", ex);
+            }
+           
         }
 
-
-        public async Task<PaginatedResult<Or_Maingroup>> GetMainGroupAsync(int pageNumber = 1, int pageSize = 25)
+        public async Task UpdateSubGroupAsync(UpdateSubgroupDto update_SubgroupDto, Guid id)
         {
-            int totalCount = await _context.Or_Maingroups.CountAsync();
 
-            var maingroup = await _context.Or_Maingroups
-
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-
-
-            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
-
-            var paginationData = new PaginationData
+            try
             {
-                totalCount = totalCount,
-                pageSize = pageSize,
-                currentPage = pageNumber,
-                totalPages = totalPages
-            };
+                var existingSubgroup = await _context.Ma_Subgroups.FindAsync(id);
 
-            // Return paginated result with data and metadata
-            return new PaginatedResult<Or_Maingroup>
-            {
-                Data = maingroup,
-                Metadata = paginationData
-            };
+                if (existingSubgroup == null)
+                {
+                    throw new InvalidOperationException("existingSubgroup not found.");
+                }
 
-        }
 
-        public async Task CreatemainMainGroupAsync(Or_maingroupDto or_MaingroupDto)
 
-        {
-            Or_Maingroup or_Maingroup = new Or_Maingroup()
+                existingSubgroup.suptreegroup = update_SubgroupDto.SupTreeGroup ?? existingSubgroup.suptreegroup;
+                existingSubgroup.State = update_SubgroupDto.State ?? existingSubgroup.State;
+                existingSubgroup.itemtype = update_SubgroupDto.TypeItem ?? existingSubgroup.itemtype;
+                existingSubgroup.SectionId = update_SubgroupDto.SectionId ?? existingSubgroup.SectionId;
+                existingSubgroup.note = update_SubgroupDto.Note ?? existingSubgroup.note;
 
+                _context.Ma_Subgroups.Update(existingSubgroup);
+
+                await _context.SaveChangesAsync();
+
+
+            }
+            catch (Exception ex)
             {
 
-                Name = or_MaingroupDto.Name,
-                //code = or_MaingroupDto.Code,
-
-                 Organization_id = Guid.NewGuid(),
-                user_id = or_MaingroupDto.UserId,
-                State = or_MaingroupDto.State,
-                CreatedAt= or_MaingroupDto.CreatedAt,
-
-            };
-            await _context.Or_Maingroups.AddAsync(or_Maingroup);
-            await _context.SaveChangesAsync();
-
-
-
+                throw new InvalidOperationException("An error occurred while update existingSubgroup", ex);
+            }
 
         }
 

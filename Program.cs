@@ -1,5 +1,6 @@
 
 using ERP;
+using ERP.PURCHASES.Interfaces;
 using ERP.Repositories;
 using ERPPurchases.Repository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -106,6 +107,7 @@ builder.Services.AddScoped<IAttachmentRepository, AttachmentRepository>();
 builder.Services.AddScoped<IOr_SectionRepo, Or_SectionRepository>();
 
 builder.Services.AddScoped<IAdd_Main_Groups_Repository, AddMainGroupsRepository>();
+builder.Services.AddScoped<IMain_Groups_Repository, Or_maingroupRepo>();
 
 builder.Services.AddScoped<IMaSubgroupRepo, MaSubgroupRepo>();
  
