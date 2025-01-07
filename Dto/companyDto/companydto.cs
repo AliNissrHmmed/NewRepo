@@ -33,4 +33,19 @@ namespace ERP
 
 
     }
+    public class CompanyWithAttachmentsDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+        public string Phone { get; set; }
+        public string Phone2 { get; set; }
+        public string Address { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public Guid UserId { get; set; }
+        public Guid OrganizationId { get; set; }
+        public bool State { get; set; }
+        public Guid MaincategoryId { get; set; }
+        public List<string> AttachmentUrls { get; set; }
+    }
+
 }

@@ -51,7 +51,7 @@ namespace ERP
 
             try
             {
-                var paginatedResult = await _companyRepo.GetPaginatedCompaniesAsync(pageNumber, pageSize);
+                var paginatedResult = await _companyRepo.GetCompaniesWithAttachmentsAsync(pageNumber, pageSize);
 
                 _response.Result = new
                 {
