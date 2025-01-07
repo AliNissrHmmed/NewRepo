@@ -99,7 +99,7 @@ namespace ERP
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.IsSuccess = true;
                 _response.Result = result;
-                _response.Message = "object updated successfully";
+                _response.Message = "";
 
                 return Ok(_response);
             }

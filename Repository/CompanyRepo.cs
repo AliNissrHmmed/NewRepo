@@ -31,6 +31,58 @@ namespace ERP
 
 
 
+        public async Task<PaginatedResult<CompanyWithAttachmentsDto>> GetCompaniesWithAttachmentsAsync(int pageNumber = 1, int pageSize = 25)
+        {
+            int totalCount = await _context.Companies.CountAsync();
+            var baseUrl = "http://localhost:5200/";
+            var companies = await _context.Companies
+                .Include(c => c.Attachments)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var companyDtos = companies.Select(company => new CompanyWithAttachmentsDto
+            {
+                Id = company.Id,
+                Name = company.name,
+                Phone = company.phone,
+                Phone2 = company.phone2,
+                Address = company.address,
+                CreatedAt = company.CreatedAt,
+                UserId = company.user_id,
+                OrganizationId = company.Organization_id,
+                State = company.State,
+                MaincategoryId = company.Maincategory_id,
+
+                AttachmentUrls= company.Attachments
+                .Where(a => !string.IsNullOrEmpty(a.url))
+                .Select(a => $"{baseUrl}{a.url}")
+                .ToList()
+            //AttachmentUrls = company.Attachments.Select(a => a.url).ToList()
+
+        }).ToList();
+
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+            var paginationData = new PaginationData
+            {
+                totalCount = totalCount,
+                pageSize = pageSize,
+                currentPage = pageNumber,
+                totalPages = totalPages
+            };
+
+            // Return paginated result with data and metadata
+            return new PaginatedResult<CompanyWithAttachmentsDto>
+            {
+                Data = companyDtos,
+                Metadata = paginationData
+            };
+        }
+
+
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         public async Task<PaginatedResult<Company>> GetPaginatedCompaniesAsync( int pageNumber = 1, int pageSize = 25)
        
@@ -38,10 +90,22 @@ namespace ERP
             int totalCount = await _context.Companies.CountAsync();
 
             var companies = await _context.Companies
-                
+                .Include(c => c.Attachments)
+
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
+
+
+            // Access the url property from each Attachment
+            foreach (var company in companies)
+            {
+                foreach (var attachment in company.Attachments)
+                {
+                    var url = attachment.url;
+                    // Do something with the url
+                }
+            }
 
             var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 

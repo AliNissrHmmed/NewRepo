@@ -1,5 +1,6 @@
 ﻿using Azure;
 using ERP.PURCHASES.Dto;
+using ERP.PURCHASES.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
@@ -14,10 +15,11 @@ namespace ERP
         private readonly IAdd_Main_Groups_Repository _repository;
         private readonly APIResponse _response;
         private readonly ApplicationDbContext _context;
-
-        public MainGroupsSubgroupController(IAdd_Main_Groups_Repository repository , ApplicationDbContext context)
+        private readonly IMain_Groups_Repository _MaingroupRepo;
+        public MainGroupsSubgroupController(IAdd_Main_Groups_Repository repository, IMain_Groups_Repository MaingroupRepo, ApplicationDbContext context)
         {
             _repository = repository;
+            _MaingroupRepo = MaingroupRepo;
             _response = new APIResponse();
             _context = context;
         }
@@ -50,72 +52,99 @@ namespace ERP
                 return StatusCode((int)HttpStatusCode.InternalServerError, _response);
             }
         }
-    }
-}
 
-//[HttpPost]
-/*        public async Task<IActionResult> AddMainGroupWithSubgroups([FromBody] AddMainGroupDto addMainGroupDto)
+
+
+        [HttpPut("Update_maingroup/{id}")]
+        public async Task<IActionResult> UpdateMaingroupAsync(Guid id, [FromQuery] Update_maingroupDto update_maingroupDto)
         {
-            Guid userId = Guid.Parse("9d81668e-0fe0-4e66-8d63-99a15f6e236e");
 
-            if (addMainGroupDto == null || string.IsNullOrEmpty(addMainGroupDto.MainGroupName))
-            {
-                return BadRequest("Invalid main group data.");
-            }
-
-            using var transaction = await _context.Database.BeginTransactionAsync();
             try
+
             {
-                var mainGroup = new Or_Maingroup
+                var existin_Maingroup = await _MaingroupRepo.GetByIdAsync(id);
+
+
+                if (existin_Maingroup == null)
                 {
-                    Id = Guid.NewGuid(),
-                    Name = addMainGroupDto.MainGroupName,
-                    code = addMainGroupDto.MainGroupCode,
-                    CreatedAt = DateTime.UtcNow,
-                    Organization_id = Guid.NewGuid(), // Set this to the appropriate value
-                    user_id = userId, // Set this to the appropriate value
-                    State = true
-                };
 
-                await _context.Or_Maingroups.AddAsync(mainGroup);
-                await _context.SaveChangesAsync();
 
-                foreach (var subgroupDto in addMainGroupDto.Subgroups)
-                {
-                    if (subgroupDto.SectionId == Guid.Empty || string.IsNullOrEmpty(subgroupDto.Note))
-                    {
-                        //_logger.LogError("Invalid subgroup data. Skipping...");
-                        continue;
-                    }
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    _response.Message = "object not found";
+                    return NotFound(_response);
 
-                    var subgroup = new Ma_Subgroup
-                    {
-                        Id = Guid.NewGuid(),
-                        code = mainGroup.code,
-                        user_id = userId,
-                        SectionId = subgroupDto.SectionId,
-                        note = subgroupDto.Note,
-                        itemtype = subgroupDto.TypeItem,
-                        suptreegroup = subgroupDto.State,
-                        CreatedAt = DateTime.UtcNow,
-                        State = subgroupDto.State,
-                        maingroup_id = mainGroup.Id
-                    };
-
-                    //mainGroup.Ma_Subgroups.Add(subgroup);
-                    await _context.Ma_Subgroups.AddRangeAsync(subgroup);
                 }
 
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
 
-                return Ok(mainGroup);
+                await _MaingroupRepo.UpdateMainGroupAsync(update_maingroupDto, id);
+
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.IsSuccess = true;
+                _response.Message = "Item updated successfully";
+
+                return Ok(_response);
             }
+
+
             catch (Exception ex)
             {
-                await transaction.RollbackAsync();
-               // _logger.LogError(ex, "An error occurred while adding main group and subgroups.");
-                return StatusCode(500, "Internal server error");
+                return StatusCode(StatusCodes.Status500InternalServerError, new APIResponse
+                {
+                    StatusCode = HttpStatusCode.InternalServerError,
+                    IsSuccess = false,
+                    ErrorMessages = new List<string> { ex.Message
+                }
+                });
+
             }
         }
-*/
+
+
+        [HttpPut("update_subgroup/{id}")]
+        public async Task<IActionResult> UpdateSubgroupAsync(Guid id, [FromQuery] UpdateSubgroupDto update_SubgroupDto)
+        {
+
+            try
+
+            {
+                var existingSubgroup = await _context.Ma_Subgroups.FindAsync(id);
+
+
+                if (existingSubgroup == null)
+                {
+
+
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.IsSuccess = false;
+                    _response.Message = "object not found";
+                    return NotFound(_response);
+
+                }
+
+
+                await _MaingroupRepo.UpdateSubGroupAsync(update_SubgroupDto, id);
+
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.IsSuccess = true;
+                _response.Message = "Item updated successfully";
+
+                return Ok(_response);
+            }
+
+
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new APIResponse
+                {
+                    StatusCode = HttpStatusCode.InternalServerError,
+                    IsSuccess = false,
+                    ErrorMessages = new List<string> { ex.Message
+                }
+                });
+
+            }
+        }
+
+    }
+}

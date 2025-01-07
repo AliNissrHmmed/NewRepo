@@ -6,7 +6,7 @@ namespace ERP
 {
     public interface ICompanyRepository : IRepository<Company> 
     {
-
+        public Task<PaginatedResult<CompanyWithAttachmentsDto>> GetCompaniesWithAttachmentsAsync(int pageNumber = 1, int pageSize = 25);
         public  Task<PaginatedResult<Company>> GetPaginatedCompaniesAsync(int pageNumber = 1, int pageSize = 25);
         public Task<Company?> GetByIdAsync(Guid id);
 

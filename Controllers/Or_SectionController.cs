@@ -184,7 +184,11 @@ public class Or_SectionController : ControllerBase
 
             if (section == null)
             {
-                return NotFound("error object not found");
+                _response.StatusCode = HttpStatusCode.NotFound;
+                _response.IsSuccess = false;
+                _response.Message = "object not found";
+                return NotFound(_response);
+               
             }
 
 
@@ -192,6 +196,12 @@ public class Or_SectionController : ControllerBase
             if (item.Any())
             {
                 _context.Ma_Subgroups.RemoveRange(item);
+
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.IsSuccess = true;
+                _response.Message = "Item deleted successfully";
+
+                return Ok(_response);
             }
 
 

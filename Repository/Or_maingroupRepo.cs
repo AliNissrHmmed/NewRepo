@@ -1,10 +1,12 @@
 ﻿using ERP.PURCHASES.Dto;
+using ERP.PURCHASES.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace ERP
 
 {
-    public class Or_maingroupRepo : Repository<Or_Maingroup>
+    public class Or_maingroupRepo : Repository<Or_Maingroup>,IMain_Groups_Repository
     {
         private readonly ApplicationDbContext _context;
 
@@ -14,16 +16,10 @@ namespace ERP
         }
 
 
-        public async Task<List<Or_Maingroup>>GetmainMainGroupAsync()
-
-        {
-           
-             return   await _context.Or_Maingroups.ToListAsync();
- 
-        }
+       
 
 
-        public async Task<PaginatedResult<Or_Maingroup>> GetMainGroupAsync(int pageNumber = 1, int pageSize = 25)
+       /* public async Task<PaginatedResult<Or_Maingroup>> GetMainGroupAsync(int pageNumber = 1, int pageSize = 25)
         {
             int totalCount = await _context.Or_Maingroups.CountAsync();
 
@@ -51,29 +47,72 @@ namespace ERP
                 Metadata = paginationData
             };
 
+        }*/
+
+
+        public async Task UpdateMainGroupAsync(Update_maingroupDto update_maingroupDto,Guid id)
+        {
+           
+            try
+            {
+                var existingMaingroup = await _context.Or_Maingroups.FindAsync(id);
+
+                if (existingMaingroup == null)
+                {
+                    throw new InvalidOperationException("Maingroup not found.");
+                }
+
+                // Update main category details
+
+                existingMaingroup.Name = update_maingroupDto.Name ?? existingMaingroup.Name;
+                existingMaingroup.State = update_maingroupDto.State ?? existingMaingroup.State;
+
+
+                 _context.Or_Maingroups.Update(existingMaingroup);
+
+                await _context.SaveChangesAsync();
+                
+
+            }
+            catch (Exception ex)
+            {
+                
+                throw new InvalidOperationException("An error occurred while update existingMaingroup", ex);
+            }
+           
         }
 
-        public async Task CreatemainMainGroupAsync(Or_maingroupDto or_MaingroupDto)
-
+        public async Task UpdateSubGroupAsync(UpdateSubgroupDto update_SubgroupDto, Guid id)
         {
-            Or_Maingroup or_Maingroup = new Or_Maingroup()
 
+            try
+            {
+                var existingSubgroup = await _context.Ma_Subgroups.FindAsync(id);
+
+                if (existingSubgroup == null)
+                {
+                    throw new InvalidOperationException("existingSubgroup not found.");
+                }
+
+
+
+                existingSubgroup.suptreegroup = update_SubgroupDto.SupTreeGroup ?? existingSubgroup.suptreegroup;
+                existingSubgroup.State = update_SubgroupDto.State ?? existingSubgroup.State;
+                existingSubgroup.itemtype = update_SubgroupDto.TypeItem ?? existingSubgroup.itemtype;
+                existingSubgroup.SectionId = update_SubgroupDto.SectionId ?? existingSubgroup.SectionId;
+                existingSubgroup.note = update_SubgroupDto.Note ?? existingSubgroup.note;
+
+                _context.Ma_Subgroups.Update(existingSubgroup);
+
+                await _context.SaveChangesAsync();
+
+
+            }
+            catch (Exception ex)
             {
 
-                Name = or_MaingroupDto.Name,
-                //code = or_MaingroupDto.Code,
-
-                 Organization_id = Guid.NewGuid(),
-                user_id = or_MaingroupDto.UserId,
-                State = or_MaingroupDto.State,
-                CreatedAt= or_MaingroupDto.CreatedAt,
-
-            };
-            await _context.Or_Maingroups.AddAsync(or_Maingroup);
-            await _context.SaveChangesAsync();
-
-
-
+                throw new InvalidOperationException("An error occurred while update existingSubgroup", ex);
+            }
 
         }
 

@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+﻿/*using AutoMapper;
 using Azure;
 using ERP.PURCHASES.Dto;
 using Microsoft.AspNetCore.Http;
@@ -153,3 +153,4 @@ namespace ERP.PURCHASES.Controllers
 
     }
 }
+*/
